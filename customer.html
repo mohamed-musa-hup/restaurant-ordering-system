@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Restaurant Ordering</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.2s, border-color 0.2s;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            padding-bottom: 2rem;
+        }
+
+        :root {
+            --bg-primary: #fef9f0;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --text-primary: #1e1e2a;
+            --text-secondary: #4a4a5a;
+            --accent: #e67e22;
+            --accent-hover: #d35400;
+            --border: #e2e8f0;
+            --shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.02);
+            --header-bg: rgba(255,255,245,0.95);
+            --footer-bg: #f1f2f6;
+        }
+
+        body.dark {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e2a;
+            --bg-card: #2d2d3a;
+            --text-primary: #f0f0f0;
+            --text-secondary: #b0b0c0;
+            --accent: #f39c12;
+            --accent-hover: #e67e22;
+            --border: #3a3a4a;
+            --shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            --header-bg: rgba(30,30,42,0.95);
+            --footer-bg: #1a1a24;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1.2rem;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            background: var(--header-bg);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+            padding: 0.8rem 0;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo h1 {
+            font-size: 1.7rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), #f1c40f);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .logo p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1.2rem;
+            align-items: center;
+        }
+
+        .theme-toggle, .cart-icon {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            padding: 0.5rem 0.9rem;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--text-primary);
+        }
+
+        .cart-icon {
+            position: relative;
+            display: flex;
+            gap: 0.4rem;
+            align-items: center;
+        }
+
+        .cart-count {
+            background: var(--accent);
+            color: white;
+            border-radius: 30px;
+            padding: 0.1rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .offers {
+            background: linear-gradient(120deg, #f9a82620, #ff8c4220);
+            border-radius: 28px;
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            border: 1px solid var(--border);
+            display: none;
+        }
+
+        .offers.show {
+            display: block;
+        }
+
+        .offer-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 0.8rem;
+        }
+        .offer-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 16px;
+            object-fit: cover;
+        }
+        .offer-info {
+            flex: 1;
+        }
+        .offer-price {
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+
+        .categories {
+            display: flex;
+            gap: 0.7rem;
+            overflow-x: auto;
+            padding: 0.5rem 0 1rem;
+            scrollbar-width: thin;
+        }
+
+        .cat-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 0.6rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .cat-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin: 1.8rem 0;
+        }
+
+        .loading-products {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        @media (min-width: 680px) {
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 1.6rem;
+            }
+        }
+
+        .product-card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: transform 0.2s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .product-img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+
+        .product-info {
+            padding: 0.8rem;
+        }
+
+        .product-title {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 1rem;
+            align-items: center;
+        }
+
+        .fav-icon {
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #ccc;
+        }
+        .fav-icon.favorited {
+            color: #e63946;
+        }
+
+        .product-price {
+            margin: 0.4rem 0;
+            font-weight: 600;
+            color: var(--accent);
+            font-size: 0.9rem;
+        }
+
+        .product-options {
+            margin: 0.5rem 0;
+        }
+
+        .option-select {
+            width: 100%;
+            padding: 0.4rem;
+            border-radius: 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            font-size: 0.8rem;
+        }
+
+        .add-to-cart {
+            width: 100%;
+            background: var(--accent);
+            border: none;
+            padding: 0.5rem;
+            border-radius: 40px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .cart-overlay {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            max-width: 420px;
+            height: 100%;
+            background: var(--bg-primary);
+            z-index: 1000;
+            box-shadow: -5px 0 30px rgba(0,0,0,0.3);
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            border-left: 1px solid var(--border);
+        }
+
+        .cart-overlay.open {
+            right: 0;
+        }
+
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            margin: 1rem 0;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .cart-total {
+            font-weight: 800;
+            font-size: 1.2rem;
+            border-top: 2px solid var(--border);
+            padding-top: 1rem;
+        }
+
+        .checkout-btn {
+            background: #25D366;
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 60px;
+            font-weight: bold;
+            margin-top: 1rem;
+            cursor: pointer;
+        }
+
+        .footer {
+            background: var(--footer-bg);
+            border-radius: 30px 30px 0 0;
+            padding: 2rem 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .map {
+            border-radius: 24px;
+            overflow: hidden;
+            margin: 1rem 0;
+            height: 200px;
+            display: none;
+        }
+
+        .map.show {
+            display: block;
+        }
+
+        .contact-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            justify-content: center;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+
+        .no-data-message {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="container header-content">
+        <div class="logo">
+            <h1 id="restaurantName">Loading...</h1>
+            <p id="restaurantTagline">Loading...</p>
+        </div>
+        <div class="header-actions">
+            <div class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </div>
+            <div class="cart-icon" id="openCartBtn">
+                <i class="fas fa-shopping-bag"></i>
+                <span class="cart-count" id="cartCount">0</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <div class="offers" id="offerSection">
+        <h2><i class="fas fa-tags"></i> Today's Special Deal</h2>
+        <div class="offer-card" id="offerCard"></div>
+    </div>
+
+    <div class="categories" id="categoriesContainer"></div>
+    <div id="productsGrid" class="products-grid">
+        <div class="loading-products">Loading menu...</div>
+    </div>
+</main>
+
+<div id="cartSidebar" class="cart-overlay">
+    <div class="cart-header">
+        <h3><i class="fas fa-bag-shopping"></i> Your Order</h3>
+        <i class="fas fa-times" id="closeCartBtn" style="font-size:1.5rem; cursor:pointer;"></i>
+    </div>
+    <div id="cartItemsList" class="cart-items">Cart is empty</div>
+    <div class="cart-total" id="cartTotalPrice">Total: 0.00</div>
+    <button class="checkout-btn" id="checkoutBtn"><i class="fab fa-whatsapp"></i> Send Order via WhatsApp</button>
+</div>
+
+<footer class="footer">
+    <div class="container">
+        <div class="map" id="mapContainer">
+            <iframe id="mapFrame" width="100%" height="100%" frameborder="0" style="border:0; height:200px;" 
+                src="" allowfullscreen="" loading="lazy"></iframe>
+        </div>
+        <div class="contact-info" id="contactInfo"></div>
+        <p style="text-align:center; font-size:0.75rem;" id="copyright">Loading...</p>
+    </div>
+</footer>
+
+<script>
+    // ==================== CONFIG ====================
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzgU-mm5vOvtQaVuq-8JA1-x60vvEmhXYwms9g_fbF-woAGAbIZrDqkoARGY6NUuBHgJA/exec';
+    
+    // Get restaurant_id from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    let restaurantId = urlParams.get('restaurant_id');
+    
+    if (!restaurantId) {
+        restaurantId = localStorage.getItem('restaurant_id');
+    }
+    
+    if (!restaurantId) {
+        document.getElementById('productsGrid').innerHTML = '<div class="no-data-message">No restaurant specified. Please contact the restaurant for the correct link.</div>';
+    }
+    
+    // Cache for data
+    let cachedMenu = null;
+    let cachedCategories = null;
+    let cachedOffer = null;
+    let cachedInfo = null;
+    let cacheTime = null;
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+    
+    // App state
+    let products = [];
+    let categories = [];
+    let currentOffer = null;
+    let restaurantInfo = {};
+    let currentCategory = "all";
+    let favorites = JSON.parse(localStorage.getItem("favorites_" + restaurantId)) || [];
+    let cart = JSON.parse(localStorage.getItem("restaurantCart_" + restaurantId)) || [];
+    let currency = "AED";
+    
+    // ==================== API CALLS ====================
+    async function callAPI(action, extraParams = {}) {
+        if (!restaurantId) return { success: false, message: "No restaurant specified" };
+        
+        const params = new URLSearchParams({
+            action: action,
+            restaurant_id: restaurantId,
+            ...extraParams
+        });
+        
+        try {
+            const response = await fetch(`${API_URL}?${params.toString()}`);
+            return await response.json();
+        } catch(error) {
+            console.error('API Error:', error);
+            return { success: false, message: error.toString() };
+        }
+    }
+    
+    // ==================== LOAD DATA WITH CACHE ====================
+    async function loadRestaurantInfo() {
+        if (cachedInfo && cacheTime && (Date.now() - cacheTime) < CACHE_DURATION) {
+            restaurantInfo = cachedInfo;
+            applyRestaurantInfo();
+            return;
+        }
+        
+        const result = await callAPI('getRestaurantInfo');
+        if (result.success && result.data) {
+            restaurantInfo = result.data;
+            cachedInfo = result.data;
+            currency = restaurantInfo.currency || 'AED';
+            applyRestaurantInfo();
+            updateCacheTime();
+        }
+    }
+    
+    async function loadMenu() {
+        if (cachedMenu && cacheTime && (Date.now() - cacheTime) < CACHE_DURATION) {
+            products = cachedMenu;
+            renderProducts();
+            return;
+        }
+        
+        const result = await callAPI('getMenu');
+        if (result.success) {
+            products = result.data || [];
+            cachedMenu = products;
+            updateCacheTime();
+            renderProducts();
+        } else {
+            document.getElementById('productsGrid').innerHTML = '<div class="no-data-message">No products available at the moment.</div>';
+        }
+    }
+    
+    async function loadCategories() {
+        if (cachedCategories && cacheTime && (Date.now() - cacheTime) < CACHE_DURATION) {
+            categories = cachedCategories;
+            renderCategories();
+            return;
+        }
+        
+        const result = await callAPI('getCategories');
+        if (result.success) {
+            categories = result.data || [];
+            cachedCategories = categories;
+            updateCacheTime();
+            renderCategories();
+        }
+    }
+    
+    async function loadOffer() {
+        if (cachedOffer && cacheTime && (Date.now() - cacheTime) < CACHE_DURATION) {
+            currentOffer = cachedOffer;
+            renderOffer();
+            return;
+        }
+        
+        const result = await callAPI('getOffer');
+        if (result.success && result.data) {
+            currentOffer = result.data;
+            cachedOffer = result.data;
+            updateCacheTime();
+        } else {
+            currentOffer = null;
+        }
+        renderOffer();
+    }
+    
+    function updateCacheTime() {
+        cacheTime = Date.now();
+    }
+    
+    // ==================== APPLY DATA TO UI ====================
+    function applyRestaurantInfo() {
+        // Update header
+        document.getElementById('restaurantName').innerText = restaurantInfo.app_name || restaurantInfo.restaurant_name || 'Restaurant';
+        document.getElementById('restaurantTagline').innerText = restaurantInfo.address ? restaurantInfo.address.split(',')[0] : 'Order Online';
+        
+        // Update copyright
+        document.getElementById('copyright').innerHTML = `© ${new Date().getFullYear()} ${restaurantInfo.app_name || 'Restaurant'} — Delivered fresh`;
+        
+        // Update contact info
+        const contactDiv = document.getElementById('contactInfo');
+        let contactHtml = '';
+        
+        if (restaurantInfo.phone) {
+            contactHtml += `<i class="fas fa-phone-alt"></i> <a href="tel:${restaurantInfo.phone}" style="color:var(--text-primary); text-decoration:none;">${restaurantInfo.phone}</a>`;
+        }
+        
+        if (restaurantInfo.whatsapp) {
+            contactHtml += `<i class="fab fa-whatsapp"></i> <a href="https://wa.me/${restaurantInfo.whatsapp}" style="color:var(--text-primary);">WhatsApp</a>`;
+        }
+        
+        if (restaurantInfo.address) {
+            contactHtml += `<i class="fas fa-map-marker-alt"></i> ${restaurantInfo.address}`;
+        }
+        
+        if (contactHtml) {
+            contactDiv.innerHTML = contactHtml;
+        } else {
+            contactDiv.style.display = 'none';
+        }
+        
+        // Update map
+        if (restaurantInfo.map_url && restaurantInfo.map_url.trim() !== '') {
+            const mapContainer = document.getElementById('mapContainer');
+            const mapFrame = document.getElementById('mapFrame');
+            mapFrame.src = restaurantInfo.map_url;
+            mapContainer.classList.add('show');
+        } else {
+            document.getElementById('mapContainer').style.display = 'none';
+        }
+    }
+    
+    // ==================== RENDER FUNCTIONS ====================
+    function renderProducts() {
+        const grid = document.getElementById("productsGrid");
+        
+        if (!products || products.length === 0) {
+            grid.innerHTML = '<div class="no-data-message">No products available. Please check back later.</div>';
+            return;
+        }
+        
+        let filtered = products.filter(p => currentCategory === "all" ? true : p.category === currentCategory);
+        
+        if (filtered.length === 0) {
+            grid.innerHTML = '<div class="no-data-message">No products in this category.</div>';
+            return;
+        }
+        
+        grid.innerHTML = filtered.map(prod => {
+            const isFav = favorites.includes(prod.id);
+            
+            // Generate options HTML
+            let optionsHtml = '';
+            if (prod.options && Object.keys(prod.options).length > 0 && Object.keys(prod.options)[0] !== 'Regular') {
+                optionsHtml = `<select class="option-select" data-id="${prod.id}">`;
+                for (const [optName, optPrice] of Object.entries(prod.options)) {
+                    const totalPrice = prod.price + optPrice;
+                    optionsHtml += `<option value='${optName}' data-add='${optPrice}'>${optName} (+${optPrice} ${currency})</option>`;
+                }
+                optionsHtml += `</select>`;
+            }
+            
+            return `
+            <div class="product-card">
+                <img class="product-img" src="${prod.image || 'https://picsum.photos/300/180?random=1'}" alt="${prod.name}" onerror="this.src='https://picsum.photos/300/180?random=1'">
+                <div class="product-info">
+                    <div class="product-title">
+                        <span>${escapeHtml(prod.name)}</span>
+                        <i class="fas fa-heart fav-icon ${isFav ? 'favorited' : ''}" data-id="${prod.id}"></i>
+                    </div>
+                    <div class="product-price">${prod.price.toFixed(2)} ${currency}</div>
+                    ${optionsHtml ? `<div class="product-options">${optionsHtml}</div>` : ''}
+                    <button class="add-to-cart" data-id="${prod.id}"><i class="fas fa-cart-plus"></i> Add To Cart</button>
+                </div>
+            </div>`;
+        }).join('');
+        
+        // Attach event listeners
+        attachFavoriteListeners();
+        attachAddToCartListeners();
+    }
+    
+    function attachFavoriteListeners() {
+        document.querySelectorAll('.fav-icon').forEach(icon => {
+            icon.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = parseInt(icon.dataset.id);
+                if (favorites.includes(id)) {
+                    favorites = favorites.filter(f => f !== id);
+                } else {
+                    favorites.push(id);
+                }
+                localStorage.setItem("favorites_" + restaurantId, JSON.stringify(favorites));
+                if (favorites.includes(id)) {
+                    icon.classList.add('favorited');
+                } else {
+                    icon.classList.remove('favorited');
+                }
+            });
+        });
+    }
+    
+    function attachAddToCartListeners() {
+        document.querySelectorAll('.add-to-cart').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const prodId = parseInt(btn.dataset.id);
+                const product = products.find(p => p.id === prodId);
+                if (!product) return;
+                
+                const selectElem = btn.closest('.product-card')?.querySelector('.option-select');
+                let selectedOption = null;
+                let finalPrice = product.price;
+                
+                if (selectElem) {
+                    const selectedOptionElem = selectElem.options[selectElem.selectedIndex];
+                    selectedOption = selectedOptionElem.value;
+                    const addPrice = parseFloat(selectedOptionElem.dataset.add);
+                    finalPrice = product.price + addPrice;
+                }
+                
+                addToCart(product, selectedOption, finalPrice);
+            });
+        });
+    }
+    
+    function renderCategories() {
+        const container = document.getElementById("categoriesContainer");
+        
+        if (!categories || categories.length === 0 || (categories.length === 1 && categories[0] === 'all')) {
+            container.innerHTML = '';
+            return;
+        }
+        
+        container.innerHTML = categories.map(cat => `<button class="cat-btn ${currentCategory === cat ? 'active' : ''}" data-cat="${cat}">${cat.toUpperCase()}</button>`).join('');
+        
+        document.querySelectorAll(".cat-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                currentCategory = btn.dataset.cat;
+                renderCategories();
+                renderProducts();
+            });
+        });
+    }
+    
+    function renderOffer() {
+        const offerSection = document.getElementById('offerSection');
+        const offerCard = document.getElementById('offerCard');
+        
+        if (currentOffer && currentOffer.name) {
+            offerSection.classList.add('show');
+            offerCard.innerHTML = `
+                <img class="offer-img" src="${currentOffer.image || 'https://picsum.photos/80/80?random=1'}" alt="Offer" onerror="this.src='https://picsum.photos/80/80?random=1'">
+                <div class="offer-info">
+                    <strong>${escapeHtml(currentOffer.name)}</strong><br>
+                    <span style="font-size:0.9rem;">Limited time offer</span>
+                </div>
+                <div class="offer-price">
+                    ${currentOffer.offer_price} ${currency}
+                    ${currentOffer.old_price ? `<span style="text-decoration:line-through; font-size:0.8rem;">${currentOffer.old_price} ${currency}</span>` : ''}
+                </div>
+                <button class="add-to-cart" style="width:auto; padding:0.5rem 1rem;" id="addOfferBtn">Grab Deal</button>
+            `;
+            
+            document.getElementById('addOfferBtn')?.addEventListener('click', addOfferToCart);
+        } else {
+            offerSection.classList.remove('show');
+        }
+    }
+    
+    // ==================== CART FUNCTIONS ====================
+    function addToCart(product, selectedOption, finalPrice) {
+        const existing = cart.find(item => item.id === product.id && item.option === selectedOption);
+        if (existing) {
+            existing.quantity++;
+        } else {
+            cart.push({
+                id: product.id,
+                name: product.name,
+                option: selectedOption || null,
+                price: finalPrice,
+                quantity: 1
+            });
+        }
+        saveCart();
+    }
+    
+    function addOfferToCart() {
+        if (currentOffer) {
+            cart.push({
+                id: 'offer_' + Date.now(),
+                name: currentOffer.name,
+                option: null,
+                price: currentOffer.offer_price,
+                quantity: 1,
+                isOffer: true
+            });
+            saveCart();
+        }
+    }
+    
+    function saveCart() {
+        localStorage.setItem("restaurantCart_" + restaurantId, JSON.stringify(cart));
+        updateCartUI();
+    }
+    
+    function removeFromCart(index) {
+        cart.splice(index, 1);
+        saveCart();
+    }
+    
+    function updateCartUI() {
+        const cartCountSpan = document.getElementById("cartCount");
+        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+        cartCountSpan.innerText = totalItems;
+        renderCartSidebar();
+    }
+    
+    function renderCartSidebar() {
+        const container = document.getElementById("cartItemsList");
+        if (!container) return;
+        
+        if (cart.length === 0) {
+            container.innerHTML = "<p>Cart is empty 🛒</p>";
+            document.getElementById("cartTotalPrice").innerHTML = `Total: 0.00 ${currency}`;
+            return;
+        }
+        
+        let html = "";
+        let total = 0;
+        cart.forEach((item, idx) => {
+            const itemTotal = item.price * item.quantity;
+            total += itemTotal;
+            html += `
+                <div class="cart-item">
+                    <div>
+                        <strong>${escapeHtml(item.name)}</strong>
+                        ${item.option ? `<br><small>${escapeHtml(item.option)}</small>` : ""}
+                        <br>${item.price.toFixed(2)} ${currency} x ${item.quantity}
+                    </div>
+                    <div>
+                        ${itemTotal.toFixed(2)} ${currency}
+                        <i class="fas fa-trash-alt" style="color:#e74c3c; margin-left:8px; cursor:pointer;" onclick="removeFromCart(${idx})"></i>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+        document.getElementById("cartTotalPrice").innerHTML = `Total: ${total.toFixed(2)} ${currency}`;
+    }
+    
+    function checkout() {
+        if (cart.length === 0) {
+            alert("Cart is empty");
+            return;
+        }
+        
+        const restaurantName = restaurantInfo.app_name || restaurantInfo.restaurant_name || 'Restaurant';
+        let message = `*${restaurantName} Order*%0A`;
+        let total = 0;
+        
+        cart.forEach(item => {
+            let subtotal = item.price * item.quantity;
+            total += subtotal;
+            message += `• ${item.name}${item.option ? ` (${item.option})` : ""} x${item.quantity} = ${subtotal.toFixed(2)} ${currency}%0A`;
+        });
+        
+        message += `%0A*Total: ${total.toFixed(2)} ${currency}*`;
+        
+        const whatsappNumber = restaurantInfo.whatsapp || '';
+        if (whatsappNumber) {
+            window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
+        } else {
+            alert("WhatsApp number not available");
+        }
+    }
+    
+    // ==================== UI CONTROLS ====================
+    function initTheme() {
+        const saved = localStorage.getItem("theme");
+        if (saved === "dark") document.body.classList.add("dark");
+        document.getElementById("themeToggle").addEventListener("click", () => {
+            document.body.classList.toggle("dark");
+            localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+        });
+    }
+    
+    function cartSidebarControls() {
+        const sidebar = document.getElementById("cartSidebar");
+        document.getElementById("openCartBtn").addEventListener("click", () => sidebar.classList.add("open"));
+        document.getElementById("closeCartBtn").addEventListener("click", () => sidebar.classList.remove("open"));
+        document.getElementById("checkoutBtn").addEventListener("click", () => {
+            checkout();
+            sidebar.classList.remove("open");
+        });
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    // ==================== INIT ====================
+    async function init() {
+        if (!restaurantId) return;
+        
+        initTheme();
+        cartSidebarControls();
+        updateCartUI();
+        
+        await loadRestaurantInfo();
+        await loadOffer();
+        await loadCategories();
+        await loadMenu();
+    }
+    
+    init();
+</script>
+</body>
+</html>

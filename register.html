@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Registration | FoodieHub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .registration-card {
+            max-width: 650px;
+            margin: 0 auto;
+            border: none;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            background: white;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            padding: 30px;
+            text-align: center;
+        }
+        .card-header h2 { color: white; margin: 0; font-weight: 700; font-size: 28px; }
+        .card-header p { color: rgba(255, 255, 255, 0.9); margin-top: 8px; font-size: 14px; }
+        .card-body { padding: 40px; }
+        .form-label { font-weight: 600; color: #2d3436; margin-bottom: 8px; font-size: 14px; }
+        .form-label i { color: #ee5a24; margin-right: 6px; }
+        .form-control, .form-select {
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #ee5a24;
+            box-shadow: 0 0 0 4px rgba(238, 90, 36, 0.1);
+        }
+        .input-hint { font-size: 12px; color: #95a5a6; margin-top: 5px; display: block; }
+        .btn-register {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-weight: 600;
+            font-size: 16px;
+            color: white;
+            width: 100%;
+            margin-top: 20px;
+            transition: transform 0.2s ease;
+        }
+        .btn-register:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(238, 90, 36, 0.3); }
+        .login-link { text-align: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e1e8ed; }
+        .login-link a { color: #ee5a24; text-decoration: none; font-weight: 600; }
+        .required-field::after { content: "*"; color: #ee5a24; margin-left: 4px; }
+        @media (max-width: 576px) { .card-body { padding: 25px; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="registration-card">
+            <div class="card-header">
+                <h2>🍽️ Restaurant Registration</h2>
+                <p>Join FoodieHub and start receiving online orders today</p>
+            </div>
+            <div class="card-body">
+                <form id="registerForm">
+                    <div class="mb-3">
+                        <label class="form-label required-field"><i class="fas fa-store"></i> Restaurant Name</label>
+                        <input type="text" class="form-control" name="restaurant_name" placeholder="e.g., Flame & Grill, Burger House" required>
+                        <small class="input-hint">This name will appear to your customers</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required-field"><i class="fas fa-envelope"></i> Email Address</label>
+                        <input type="email" class="form-control" name="email" placeholder="restaurant@example.com" required>
+                        <small class="input-hint">Used for login and account notifications</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required-field"><i class="fas fa-lock"></i> Password</label>
+                        <input type="password" class="form-control" name="password" placeholder="Create a strong password" required>
+                        <small class="input-hint">Minimum 6 characters recommended</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required-field"><i class="fas fa-phone"></i> Phone Number</label>
+                        <input type="tel" class="form-control" name="phone" placeholder="e.g., 971501234567" required>
+                        <small class="input-hint">Your contact number for customer inquiries</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required-field"><i class="fab fa-whatsapp"></i> WhatsApp Number (Orders)</label>
+                        <input type="tel" class="form-control" name="whatsapp" placeholder="e.g., 971501234567" required>
+                        <small class="input-hint">All customer orders will be sent to this WhatsApp number</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required-field"><i class="fas fa-location-dot"></i> Restaurant Address</label>
+                        <textarea class="form-control" name="address" rows="2" placeholder="Your full address for delivery/pickup" required></textarea>
+                        <small class="input-hint">Customers will see this address for pickup orders</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-map"></i> Google Maps Embed URL</label>
+                        <input type="text" class="form-control" name="map_url" placeholder="https://www.google.com/maps/embed?pb=...">
+                        <small class="input-hint">Optional: Embed a map showing your location</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required-field"><i class="fas fa-coins"></i> Currency</label>
+                        <select class="form-select" name="currency" required>
+                            <option value="AED">🇦🇪 AED - UAE Dirham</option>
+                            <option value="SAR">🇸🇦 SAR - Saudi Riyal</option>
+                            <option value="EGP">🇪🇬 EGP - Egyptian Pound</option>
+                            <option value="USD">🇺🇸 USD - US Dollar</option>
+                        </select>
+                        <small class="input-hint">All prices will be displayed in this currency</small>
+                    </div>
+                    <button type="submit" class="btn-register"><i class="fas fa-check-circle"></i> Register Restaurant</button>
+                    <div class="login-link">Already have an account? <a href="login.html">Login here</a></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // استخدم الرابط الجديد الذي يعمل لديك
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxQgPqZO5bzTjTvA4yDDa0XG_qWW40aauiMkAyrJsvtNn5cLkHPdIDWToHaOcwdM4mnyg/exec';
+        
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.querySelector('.btn-register');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
+            submitBtn.disabled = true;
+            
+            const formData = new FormData(e.target);
+            const params = new URLSearchParams();
+            params.append('action', 'register');
+            
+            for (let [key, value] of formData.entries()) {
+                params.append(key, value);
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}?${params.toString()}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    Swal.fire({
+                        title: '🎉 Registration Successful!',
+                        html: 'Your account has been created.<br><strong>Waiting for admin approval.</strong><br>You will receive an email once approved.',
+                        icon: 'success',
+                        confirmButtonColor: '#ee5a24',
+                        confirmButtonText: 'Go to Login'
+                    }).then(() => {
+                        window.location.href = 'login.html';
+                    });
+                } else {
+                    Swal.fire({ title: '❌ Registration Failed', text: result.message, icon: 'error', confirmButtonColor: '#ee5a24' });
+                }
+            } catch(error) {
+                Swal.fire({ title: '❌ Connection Error', text: 'Unable to connect to server. Please try again.', icon: 'error', confirmButtonColor: '#ee5a24' });
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
