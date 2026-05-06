@@ -462,7 +462,7 @@
     let restaurantInfo = {};
     let currentCategory = "all";
     let favorites = JSON.parse(localStorage.getItem("favorites_" + restaurantId)) || [];
-    let cart = JSON.parse(localStorage.getItem("restaurantCart_" + restaurantId)) || [];
+    let cart = [];
     let currency = "AED";
     
     // ==================== API CALLS ====================
@@ -558,16 +558,37 @@
         cacheTime = Date.now();
     }
     
+    // ==================== LOAD CART ====================
+    function loadCart() {
+        const saved = localStorage.getItem("restaurantCart_" + restaurantId);
+        if (saved) {
+            try {
+                const cartData = JSON.parse(saved);
+                if (cartData.items) {
+                    cart = cartData.items;
+                } else if (Array.isArray(cartData)) {
+                    cart = cartData;
+                } else {
+                    cart = [];
+                }
+                if (cartData.currency) {
+                    currency = cartData.currency;
+                }
+            } catch(e) {
+                cart = [];
+            }
+        } else {
+            cart = [];
+        }
+        updateCartUI();
+    }
+    
     // ==================== APPLY DATA TO UI ====================
     function applyRestaurantInfo() {
-        // Update header
         document.getElementById('restaurantName').innerText = restaurantInfo.app_name || restaurantInfo.restaurant_name || 'Restaurant';
         document.getElementById('restaurantTagline').innerText = restaurantInfo.address ? restaurantInfo.address.split(',')[0] : 'Order Online';
-        
-        // Update copyright
         document.getElementById('copyright').innerHTML = `© ${new Date().getFullYear()} ${restaurantInfo.app_name || 'Restaurant'} — Delivered fresh`;
         
-        // Update contact info
         const contactDiv = document.getElementById('contactInfo');
         let contactHtml = '';
         
@@ -589,7 +610,6 @@
             contactDiv.style.display = 'none';
         }
         
-        // Update map
         if (restaurantInfo.map_url && restaurantInfo.map_url.trim() !== '') {
             const mapContainer = document.getElementById('mapContainer');
             const mapFrame = document.getElementById('mapFrame');
@@ -619,20 +639,25 @@
         grid.innerHTML = filtered.map(prod => {
             const isFav = favorites.includes(prod.id);
             
-            // Generate options HTML
             let optionsHtml = '';
-            if (prod.options && Object.keys(prod.options).length > 0 && Object.keys(prod.options)[0] !== 'Regular') {
-                optionsHtml = `<select class="option-select" data-id="${prod.id}">`;
-                for (const [optName, optPrice] of Object.entries(prod.options)) {
-                    const totalPrice = prod.price + optPrice;
-                    optionsHtml += `<option value='${optName}' data-add='${optPrice}'>${optName} (+${optPrice} ${currency})</option>`;
+            let hasValidOptions = false;
+            
+            if (prod.options && typeof prod.options === 'object') {
+                const optionKeys = Object.keys(prod.options);
+                if (optionKeys.length > 0 && (optionKeys.length > 1 || optionKeys[0] !== 'Regular')) {
+                    hasValidOptions = true;
+                    optionsHtml = `<select class="option-select" data-id="${prod.id}">`;
+                    for (const [optName, optPrice] of Object.entries(prod.options)) {
+                        const totalPrice = prod.price + optPrice;
+                        optionsHtml += `<option value='${optName}' data-add='${optPrice}'>${optName} (+${optPrice} ${currency})</option>`;
+                    }
+                    optionsHtml += `</select>`;
                 }
-                optionsHtml += `</select>`;
             }
             
             return `
             <div class="product-card">
-                <img class="product-img" src="${prod.image || 'https://picsum.photos/300/180?random=1'}" alt="${prod.name}" onerror="this.src='https://picsum.photos/300/180?random=1'">
+                <img class="product-img" src="${prod.image || 'https://picsum.photos/300/180?random=1'}" alt="${escapeHtml(prod.name)}" onerror="this.src='https://picsum.photos/300/180?random=1'">
                 <div class="product-info">
                     <div class="product-title">
                         <span>${escapeHtml(prod.name)}</span>
@@ -645,7 +670,6 @@
             </div>`;
         }).join('');
         
-        // Attach event listeners
         attachFavoriteListeners();
         attachAddToCartListeners();
     }
@@ -654,7 +678,7 @@
         document.querySelectorAll('.fav-icon').forEach(icon => {
             icon.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const id = parseInt(icon.dataset.id);
+                const id = icon.dataset.id;
                 if (favorites.includes(id)) {
                     favorites = favorites.filter(f => f !== id);
                 } else {
@@ -673,19 +697,21 @@
     function attachAddToCartListeners() {
         document.querySelectorAll('.add-to-cart').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const prodId = parseInt(btn.dataset.id);
-                const product = products.find(p => p.id === prodId);
+                const prodId = btn.dataset.id;
+                const product = products.find(p => String(p.id) === String(prodId));
                 if (!product) return;
                 
                 const selectElem = btn.closest('.product-card')?.querySelector('.option-select');
                 let selectedOption = null;
                 let finalPrice = product.price;
                 
-                if (selectElem) {
+                if (selectElem && selectElem.options.length > 0) {
                     const selectedOptionElem = selectElem.options[selectElem.selectedIndex];
                     selectedOption = selectedOptionElem.value;
                     const addPrice = parseFloat(selectedOptionElem.dataset.add);
-                    finalPrice = product.price + addPrice;
+                    if (!isNaN(addPrice)) {
+                        finalPrice = product.price + addPrice;
+                    }
                 }
                 
                 addToCart(product, selectedOption, finalPrice);
@@ -701,7 +727,7 @@
             return;
         }
         
-        container.innerHTML = categories.map(cat => `<button class="cat-btn ${currentCategory === cat ? 'active' : ''}" data-cat="${cat}">${cat.toUpperCase()}</button>`).join('');
+        container.innerHTML = categories.map(cat => `<button class="cat-btn ${currentCategory === cat ? 'active' : ''}" data-cat="${cat}">${escapeHtml(cat).toUpperCase()}</button>`).join('');
         
         document.querySelectorAll(".cat-btn").forEach(btn => {
             btn.addEventListener("click", () => {
@@ -769,7 +795,11 @@
     }
     
     function saveCart() {
-        localStorage.setItem("restaurantCart_" + restaurantId, JSON.stringify(cart));
+        const cartData = {
+            items: cart,
+            currency: currency
+        };
+        localStorage.setItem("restaurantCart_" + restaurantId, JSON.stringify(cartData));
         updateCartUI();
     }
     
@@ -880,7 +910,7 @@
         
         initTheme();
         cartSidebarControls();
-        updateCartUI();
+        loadCart();
         
         await loadRestaurantInfo();
         await loadOffer();
